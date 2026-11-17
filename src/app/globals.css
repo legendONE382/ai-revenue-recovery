@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --color-ink: #1c1917;
+  --color-paper: #faf9f6;
+  --color-line: #e7e5e0;
+  --color-brand: #0f5132;
+  --color-brand-soft: #e8f1ec;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+::selection {
+  background: #cfe3d7;
+}
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+.prose-email {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+}

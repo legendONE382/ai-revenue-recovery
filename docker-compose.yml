@@ -1,0 +1,47 @@
+# Self-hosted stack: Postgres + web app + background worker.
+#   cp .env.example .env && node scripts/generate-secrets.mjs   (paste secrets into .env)
+#   docker compose up -d --build
+# Put a TLS reverse proxy (Caddy, Traefik, nginx) in front and set APP_URL=https://your-domain.
+# For a quick local test over http, set INSECURE_COOKIES=1 in .env.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: app_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/app_db
+      DATABASE_SSL: ""
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      APP_URL: http://app:3000
+      WORKER_INTERVAL_MS: "60000"
+    command: ["node", "scripts/worker.mjs"]
+    depends_on:
+      - app
+
+volumes:
+  pgdata:
