@@ -59,7 +59,8 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
                   {sync?.lastError && <p className="mt-1 text-xs text-amber-700">Last error: {sync.lastError}</p>}
                 </div>
                 <div className="flex flex-col gap-2 md:items-end">
-                  {account.status !== "active" && account.provider === "gmail" && ready && <a href="/api/integrations/google/start" className={buttonClass("primary", "sm")}>Reconnect</a>}
+{/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+                   {account.status !== "active" && account.provider === "gmail" && ready && <a href="/api/integrations/google/start" className={buttonClass("primary", "sm")}>Reconnect</a>}
                   <AccountActions id={account.id} active={account.status === "active"} />
                 </div>
               </li>
@@ -75,16 +76,17 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
           <ul className="mt-2 space-y-0.5 font-mono text-[11px] text-stone-500">{GMAIL_SCOPES.map((s) => <li key={s}>{s}</li>)}</ul>
           <div className="mt-4">
             {ready ? (
+              /* eslint-disable-next-line @next/next/no-html-link-for-pages */
               <a href="/api/integrations/google/start" className={buttonClass("primary")}>Connect Gmail</a>
             ) : (
-              <div className="rounded-lg bg-amber-50 p-3 text-xs text-amber-900">
-                <div className="mb-1 flex items-center gap-1 font-medium"><CircleAlert size={12} /> Not configured on this server</div>
-                Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, APP_URL and TOKEN_ENCRYPTION_KEY. Restricted Gmail scopes require Google verification and a CASA security assessment before public use — until then only test users added in Google Cloud Console can connect. See README.
+              <div className="rounded-lg bg-stone-50 p-3 text-xs text-stone-600">
+                <div className="mb-1 flex items-center gap-1 font-medium">Gmail connection coming soon</div>
+                Gmail integration is being set up. In the meantime, try the sample inbox to explore the product.
               </div>
             )}
           </div>
-          <p className="mt-4 flex items-start gap-1.5 text-xs text-stone-500">
-            <CheckCircle2 size={12} className="mt-0.5 shrink-0" /> Real-time updates: {pushEnabled ? "Pub/Sub push notifications enabled, with 15-minute polling as a safety net." : "Pub/Sub not configured — falls back to polling every 15 minutes via the scheduler."}
+          <p className="mt-4 text-xs text-stone-500">
+            {pushEnabled ? "Real-time updates enabled." : "Updates are checked every 15 minutes."}
           </p>
         </Card>
         <Card className="p-5">

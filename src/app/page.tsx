@@ -134,7 +134,7 @@ export default async function Landing() {
 
       <footer className="border-t border-[var(--color-line)]">
         <div className="mx-auto flex max-w-6xl flex-col justify-between gap-2 px-6 py-8 text-xs text-stone-500 sm:flex-row">
-          <span>Inbox Revenue Intelligence — early access. Gmail access requires Google verification before public launch.</span>
+          <span>Inbox Revenue Intelligence — helping you find revenue hiding in your inbox.</span>
           <span className="flex gap-4">
             <Link href="/privacy" className="hover:text-stone-800">Privacy & data handling</Link>
             <Link href="/terms" className="hover:text-stone-800">Terms</Link>

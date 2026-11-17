@@ -110,7 +110,7 @@ export function SettingsForms({ name, settings, prefs, keys, managedProviders, e
                 <li key={p} className="flex items-center justify-between rounded-lg border border-[var(--color-line)] px-3 py-2">
                   <span className="capitalize">{p}</span>
                   <span className="text-xs text-stone-500">
-                    {k ? `your key${k.model ? ` · ${k.model}` : ""}` : managedProviders.includes(p) ? "server-managed key" : "not configured"}
+                    {k ? `your key${k.model ? ` · ${k.model}` : ""}` : managedProviders.includes(p) ? "connected" : "not connected"}
                     {k && (
                       <button className="ml-2 text-red-700 hover:underline" onClick={() => ai.save({ aiKey: { provider: p, apiKey: null } }, "Key removed")}>remove</button>
                     )}
@@ -129,7 +129,7 @@ export function SettingsForms({ name, settings, prefs, keys, managedProviders, e
             }}
           >
             <label className="text-xs font-medium">Provider<select name="provider" className={input}><option value="gemini">Gemini</option><option value="groq">Groq</option><option value="mistral">Mistral</option><option value="openai">OpenAI</option></select></label>
-            <label className="text-xs font-medium">API key<input name="apiKey" type="password" autoComplete="off" required className={input} disabled={!encryptionReady} placeholder={encryptionReady ? "" : "Server encryption key not configured"} /></label>
+            <label className="text-xs font-medium">API key<input name="apiKey" type="password" autoComplete="off" required className={input} disabled={!encryptionReady} placeholder={encryptionReady ? "Enter your API key" : "Encryption not available"} /></label>
             <label className="text-xs font-medium">Model (optional)<input name="model" className={input} placeholder="default per task" /></label>
             <button disabled={ai.busy || !encryptionReady} className={buttonClass("primary", "sm")}>Save key</button>
           </form>
@@ -160,7 +160,7 @@ export function SettingsForms({ name, settings, prefs, keys, managedProviders, e
           ))}
           <label className="flex items-center gap-2 border-t border-[var(--color-line)] pt-3 text-sm">
             <input type="checkbox" name="emailNotifications" defaultChecked={prefs.emailNotifications} disabled={!emailReady} className="accent-emerald-700" /> Also send notifications by email (batched, at most every 15 minutes)
-            {!emailReady && <span className="text-xs text-stone-400">— email delivery not configured on this server</span>}
+            {!emailReady && <span className="text-xs text-stone-400">— email notifications unavailable</span>}
           </label>
           <label className="block text-sm font-medium">Only notify at priority ≥<input name="minPriority" type="number" min={0} max={100} defaultValue={prefs.minPriority} className={input + " w-28"} /></label>
           <div className="flex items-center gap-3"><button disabled={notif.busy} className={buttonClass("primary", "sm")}>Save</button>{notif.msg && <span className="text-xs text-stone-600">{notif.msg}</span>}</div>

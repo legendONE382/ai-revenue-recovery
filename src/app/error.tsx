@@ -4,9 +4,7 @@ import { useEffect } from "react";
 
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    // eslint-disable-next-line no-console
     console.error("[ui] error boundary:", error.digest ?? error.message);
-    // Return nothing (not a cleanup function) to avoid React 19 dev-mode false positive
   }, [error]);
   return (
     <main className="grid min-h-[70vh] place-items-center px-6 text-center">

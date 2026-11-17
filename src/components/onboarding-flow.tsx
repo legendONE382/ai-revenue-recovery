@@ -86,12 +86,12 @@ export function OnboardingFlow({ googleReady, demoFirst }: { googleReady: boolea
               </div>
             </li>
           </ul>
-          {!googleReady && (
-            <p className="mt-6 flex gap-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
-              <ShieldAlert size={16} className="mt-0.5 shrink-0" />
-              Gmail OAuth isn&apos;t configured on this server yet (or the app is awaiting Google verification). You can explore the full product with the sample inbox.
-            </p>
-          )}
+           {!googleReady && (
+             <p className="mt-6 flex gap-2 rounded-lg bg-stone-50 p-3 text-sm text-stone-600">
+               <ShieldAlert size={16} className="mt-0.5 shrink-0" />
+               Gmail connection is being set up. You can explore the full product with the sample inbox in the meantime.
+             </p>
+           )}
           <button className={buttonClass("primary") + " mt-7"} onClick={() => setStep(1)}>
             Continue
           </button>

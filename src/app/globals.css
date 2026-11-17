@@ -13,23 +13,54 @@
 
 html {
   -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
 }
+
 body {
   background: var(--color-paper);
   color: var(--color-ink);
 }
+
 ::selection {
   background: #cfe3d7;
 }
+
 .font-display {
   font-family: var(--font-display);
   letter-spacing: -0.01em;
 }
+
 .tabular {
   font-variant-numeric: tabular-nums;
 }
+
 .prose-email {
   white-space: pre-wrap;
   word-break: break-word;
   line-height: 1.6;
+}
+
+/* Smooth focus transitions */
+*:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+/* Subtle scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d6d3cd;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b8b5af;
 }
