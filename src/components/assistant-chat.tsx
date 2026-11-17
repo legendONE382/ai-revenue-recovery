@@ -22,7 +22,9 @@ export function AssistantChat({ aiEnabled }: { aiEnabled: boolean }) {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const end = useRef<HTMLDivElement>(null);
-  useEffect(() => end.current?.scrollIntoView({ behavior: "smooth" }), [msgs]);
+  useEffect(() => {
+    end.current?.scrollIntoView({ behavior: "smooth" });
+  }, [msgs]);
 
   async function ask(q: string) {
     if (!q.trim() || busy) return;
