@@ -50,6 +50,11 @@ export async function rateLimit(key: string, limit: number, windowSec: number) {
 }
 
 export async function parseBody<T>(req: Request, schema: ZodSchema<T>): Promise<T> {
+  // Limit request body size to 1MB
+  const contentLength = req.headers.get("content-length");
+  if (contentLength && parseInt(contentLength, 10) > 1_048_576) {
+    throw new HttpError(413, "Request body too large");
+  }
   let raw: unknown;
   try {
     raw = await req.json();
@@ -79,7 +84,12 @@ export function withAuth<C = unknown>(handler: (req: Request, auth: AuthContext,
 
 export function errorResponse(e: unknown) {
   if (e instanceof HttpError) return json({ error: e.message }, e.status);
-  // Never log email bodies/tokens: only the error message.
-  console.error("[api] unhandled error:", e instanceof Error ? e.message : "unknown");
-  return json({ error: "Internal error" }, 500);
+  // Never leak internal error details to the client
+  const message = e instanceof Error ? e.message : "unknown";
+  console.error("[api] unhandled error:", message);
+  // In production, return a generic message; in development, include the error for debugging
+  if (process.env.NODE_ENV === "development") {
+    return json({ error: message }, 500);
+  }
+  return json({ error: "Internal server error" }, 500);
 }
