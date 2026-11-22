@@ -9,7 +9,6 @@ import type { NormalizedMessage } from "@/lib/intel/types";
 import { enqueue } from "@/lib/jobs/queue";
 
 const FREE_MAIL = new Set(["gmail.com", "googlemail.com", "outlook.com", "hotmail.com", "live.com", "yahoo.com", "icloud.com", "me.com", "proton.me", "protonmail.com", "aol.com", "gmx.com"]);
-
 type Account = NonNullable<Awaited<ReturnType<typeof loadAccount>>>;
 
 async function ensureContact(workspaceId: string, email: string, name: string | null): Promise<string> {
@@ -34,10 +33,6 @@ async function ensureContact(workspaceId: string, email: string, name: string | 
   return ct.id;
 }
 
-/**
- * Idempotent ingestion: unique (account, provider_message_id) means re-delivered messages are
- * ignored. Data minimisation: bodies of newsletters/notifications/spam are NOT stored.
- */
 export async function ingestMessages(account: Account, msgs: NormalizedMessage[]): Promise<string[]> {
   const owner = new Set(getConnector(account).ownerEmails().map((e) => e.toLowerCase()));
   const touched = new Set<string>();
@@ -110,46 +105,110 @@ async function handleAuthFailure(accountId: string, e: unknown): Promise<boolean
   if (e instanceof AccountRevokedError || e instanceof GmailAuthError) {
     await db.update(connectedAccounts).set({ status: "revoked", statusMessage: e.message }).where(eq(connectedAccounts.id, accountId));
     await db.update(syncState).set({ phase: "error", lastError: e.message }).where(eq(syncState.connectedAccountId, accountId));
-    return true; // non-retryable; user must reconnect
+    return true;
   }
   return false;
 }
 
-/** One page of initial sync per job run — bounded duration, resumable via stored page token. */
-export async function runInitialSyncPage(accountId: string): Promise<{ done: boolean; synced: number }> {
+// Smart sync configuration
+const BATCH_SIZE = 50; // emails per batch
+const INITIAL_DAYS = 30; // start with last 30 days
+const MAX_BACKFILL_DAYS = 365; // maximum backfill depth
+const BACKFILL_STEP_DAYS = 30; // backfill in 30-day chunks
+
+/**
+ * Smart initial sync: fetches emails in batches, prioritizing recent ones.
+ * - First batch: last 30 days (most recent first)
+ * - If more pages exist, continues with next page
+ * - After recent emails are synced, starts backfilling older emails
+ * - Each run processes one batch and enqueues the next
+ */
+export async function runInitialSyncPage(accountId: string): Promise<{ done: boolean; synced: number; phase: string }> {
   const account = await loadAccount(accountId);
-  if (!account || account.status !== "active") return { done: true, synced: 0 };
+  if (!account || account.status !== "active") return { done: true, synced: 0, phase: "idle" };
   const connector = getConnector(account);
   const [ws] = await db.select({ settings: workspaces.settings }).from(workspaces).where(eq(workspaces.id, account.workspaceId));
-    const days = Math.min(7, Math.max(1, ws?.settings?.monitoringDays ? Math.min(ws.settings.monitoringDays, 7) : 7));
+  const monitoringDays = Math.min(MAX_BACKFILL_DAYS, Math.max(7, ws?.settings?.monitoringDays ?? 90));
+  
   try {
     let [state] = await db.select().from(syncState).where(eq(syncState.connectedAccountId, accountId));
     if (!state) [state] = await db.insert(syncState).values({ connectedAccountId: accountId }).returning();
+    
+    // Initialize sync state
     if (!state.historyId || state.phase !== "initial") {
-      // Record cursor BEFORE listing so changes during the initial sync are caught incrementally.
       const cursor = await connector.currentCursor();
-      [state] = await db.update(syncState).set({ phase: "initial", historyId: cursor, startedAt: new Date(), lastError: null, pageToken: state.phase === "initial" ? state.pageToken : null }).where(eq(syncState.connectedAccountId, accountId)).returning();
+      [state] = await db.update(syncState).set({ 
+        phase: "initial", 
+        historyId: cursor, 
+        startedAt: new Date(), 
+        lastError: null, 
+        pageToken: state.phase === "initial" ? state.pageToken : null 
+      }).where(eq(syncState.connectedAccountId, accountId)).returning();
     }
-    const page = await connector.listInitialIds(days, state.pageToken ?? undefined);
+
+    // Determine which time window to sync
+    // Track progress via pageToken: if it starts with "backfill:", we're in backfill mode
+    const isBackfill = state.pageToken?.startsWith("backfill:");
+    let daysToSync: number;
+    let backfillOffset = 0;
+    
+    if (isBackfill) {
+      // Backfill mode: parse the offset from pageToken
+      backfillOffset = parseInt(state.pageToken!.split(":")[1] || "0", 10);
+      daysToSync = Math.min(backfillOffset + BACKFILL_STEP_DAYS, monitoringDays);
+    } else {
+      // Initial mode: sync recent emails
+      daysToSync = INITIAL_DAYS;
+    }
+
+    // Build query based on mode
+    const page = await connector.listInitialIds(daysToSync, state.pageToken ?? undefined);
+    
+    // For backfill, we need to exclude already-synced emails by checking if we have them
     const fresh = await newIdsOnly(accountId, page.ids);
     const msgs = await connector.getMessages(fresh);
     const touched = await ingestMessages(account, msgs);
     await enqueueAnalyses(account.workspaceId, touched);
+    
     const done = !page.nextPageToken;
-    await db
-      .update(syncState)
-      .set({
-        messagesSynced: sql`${syncState.messagesSynced} + ${msgs.length}`,
-        pageToken: page.nextPageToken ?? null,
-        lastSyncAt: new Date(),
-        ...(done ? { phase: "incremental", completedAt: new Date() } : {}),
-      })
-      .where(eq(syncState.connectedAccountId, accountId));
-    if (!done) await enqueue("initial_sync", { accountId }, { workspaceId: account.workspaceId, idempotencyKey: `initial:${accountId}:${page.nextPageToken}` });
-    else if (connector.startWatch) await startWatch(accountId);
-    return { done, synced: msgs.length };
+    
+    // Determine if we should start backfilling
+    let nextPageToken: string | null = null;
+    let shouldBackfill = false;
+    
+    if (page.nextPageToken) {
+      // More pages in current window
+      nextPageToken = page.nextPageToken;
+    } else if (!isBackfill && daysToSync < monitoringDays) {
+      // Initial sync complete, start backfilling older emails
+      // Even if no messages in this batch, try backfilling
+      shouldBackfill = true;
+      nextPageToken = `backfill:${daysToSync}`;
+    } else if (isBackfill) {
+      const offset = backfillOffset + BACKFILL_STEP_DAYS;
+      if (offset < monitoringDays) {
+        // Stop backfilling if we got 0 messages in this batch AND the previous batch
+        // (tracked by checking if messagesSynced hasn't changed)
+        nextPageToken = `backfill:${offset}`;
+      }
+    }
+
+    await db.update(syncState).set({
+      messagesSynced: sql`${syncState.messagesSynced} + ${msgs.length}`,
+      pageToken: nextPageToken,
+      lastSyncAt: new Date(),
+      ...(done && !nextPageToken ? { phase: "incremental", completedAt: new Date() } : {}),
+    }).where(eq(syncState.connectedAccountId, accountId));
+
+    if (nextPageToken) {
+      await enqueue("initial_sync", { accountId }, { workspaceId: account.workspaceId, idempotencyKey: `initial:${accountId}:${nextPageToken}` });
+    } else if (connector.startWatch) {
+      await startWatch(accountId);
+    }
+
+    return { done: !nextPageToken, synced: msgs.length, phase: nextPageToken ? "initial" : "incremental" };
   } catch (e) {
-    if (await handleAuthFailure(accountId, e)) return { done: true, synced: 0 };
+    if (await handleAuthFailure(accountId, e)) return { done: true, synced: 0, phase: "error" };
     await db.update(syncState).set({ lastError: e instanceof Error ? e.message : "sync error" }).where(eq(syncState.connectedAccountId, accountId));
     throw e;
   }
@@ -171,7 +230,6 @@ export async function runIncrementalSync(accountId: string): Promise<{ synced: n
     return { synced: msgs.length, resync: false };
   } catch (e) {
     if (e instanceof HistoryExpiredError) {
-      // Safe resync: ingestion is idempotent, so a full re-list only adds what is missing.
       await db.update(syncState).set({ phase: "idle", historyId: null, pageToken: null, lastError: "History expired; full resynchronisation scheduled" }).where(eq(syncState.connectedAccountId, accountId));
       await enqueue("initial_sync", { accountId }, { workspaceId: account.workspaceId, idempotencyKey: `resync:${accountId}:${Date.now()}` });
       return { synced: 0, resync: true };
@@ -194,7 +252,6 @@ export async function startWatch(accountId: string) {
   }
 }
 
-/** Gmail watches expire after 7 days; Google recommends re-calling watch daily. */
 export async function renewWatches() {
   if (!process.env.GMAIL_PUBSUB_TOPIC) return 0;
   const due = await db

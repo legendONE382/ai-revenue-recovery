@@ -113,9 +113,36 @@ class GmailConnector implements MailConnector {
   }
   async listInitialIds(sinceDays: number, pageToken?: string) {
     // Gmail-side pre-filtering saves quota; deterministic filters still run afterwards.
-    const q = `newer_than:${sinceDays}d -in:chats -category:promotions -category:social -category:forums`;
-    const r = await this.client.listMessages(q, pageToken, 20);
-    return { ids: (r.messages ?? []).map((m) => m.id), nextPageToken: r.nextPageToken };
+    let q: string;
+    let gmailPageToken: string | undefined;
+
+    if (pageToken?.startsWith("backfill:")) {
+      // Backfill mode: parse offset and optional Gmail page token
+      const parts = pageToken.split(":");
+      const offset = parseInt(parts[1] || "0", 10);
+      gmailPageToken = parts[2] || undefined;
+      const olderThan = offset + 30;
+      q = `older_than:${olderThan}d newer_than:${offset}d -in:chats -category:promotions -category:social -category:forums`;
+    } else {
+      // Initial mode: fetch recent emails
+      q = `newer_than:${sinceDays}d -in:chats -category:promotions -category:social -category:forums`;
+      gmailPageToken = pageToken;
+    }
+
+    const r = await this.client.listMessages(q, gmailPageToken, 50);
+
+    // Build next page token
+    let nextPageToken: string | undefined;
+    if (r.nextPageToken) {
+      if (pageToken?.startsWith("backfill:")) {
+        const parts = pageToken.split(":");
+        nextPageToken = `backfill:${parts[1]}:${r.nextPageToken}`;
+      } else {
+        nextPageToken = r.nextPageToken;
+      }
+    }
+
+    return { ids: (r.messages ?? []).map((m) => m.id), nextPageToken };
   }
   async getMessages(ids: string[]) {
     const out: NormalizedMessage[] = [];
