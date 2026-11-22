@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, Clock, FileText, Inbox, Lock, MailQuestion, ReceiptText, ShieldCheck } from "lucide-react";
+import { ArrowRight, BadgeCheck, Clock, FileText, Inbox, Lock, MailQuestion, ReceiptText, ShieldCheck, Zap, Users, TrendingUp, Bell } from "lucide-react";
 import { getAuth } from "@/lib/auth";
 import { buttonClass } from "@/components/ui";
 
@@ -26,6 +26,9 @@ export default async function Landing() {
           <Link href="/privacy" className="hidden px-3 py-2 text-stone-600 hover:text-stone-900 sm:block">
             Privacy
           </Link>
+          <Link href="/terms" className="hidden px-3 py-2 text-stone-600 hover:text-stone-900 sm:block">
+            Terms
+          </Link>
           {auth ? (
             <Link href="/app" className={buttonClass("primary")}>
               Open dashboard
@@ -36,17 +39,18 @@ export default async function Landing() {
                 Sign in
               </Link>
               <Link href="/register" className={buttonClass("primary")}>
-                Get started
+                Get started free
               </Link>
             </>
           )}
         </nav>
       </header>
 
+      {/* Hero */}
       <section className="mx-auto grid max-w-6xl gap-12 px-6 pb-20 pt-12 lg:grid-cols-[1.1fr_1fr] lg:pt-20">
         <div>
           <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-[var(--color-line)] bg-white px-3 py-1 text-xs text-stone-600">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" /> For freelancers, consultants & small agencies
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" /> For freelancers, consultants &amp; small agencies
           </p>
           <h1 className="font-display text-5xl leading-[1.05] text-stone-900 sm:text-6xl">Find the revenue hiding in your inbox.</h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-stone-600">
@@ -60,7 +64,7 @@ export default async function Landing() {
               Try with a sample inbox
             </Link>
           </div>
-          <p className="mt-4 text-xs text-stone-500">Read-only access. Nothing is ever sent without your explicit approval.</p>
+          <p className="mt-4 text-xs text-stone-500">Read-only access. Nothing is ever sent without your explicit approval. Free to start.</p>
         </div>
 
         <div className="relative">
@@ -82,12 +86,13 @@ export default async function Landing() {
               ))}
             </ul>
             <div className="mt-4 rounded-lg bg-[var(--color-brand-soft)] p-3 text-xs text-[var(--color-brand)]">
-              <strong>Evidence:</strong> “Please find attached invoice INV-2041 … The amount due is £2,400, payable by …”
+              <strong>Evidence:</strong> &ldquo;Please find attached invoice INV-2041 … The amount due is £2,400, payable by …&rdquo;
             </div>
           </div>
         </div>
       </section>
 
+      {/* What it watches for */}
       <section className="border-y border-[var(--color-line)] bg-white">
         <div className="mx-auto max-w-6xl px-6 py-16">
           <h2 className="font-display text-3xl">What it watches for</h2>
@@ -109,35 +114,120 @@ export default async function Landing() {
         </div>
       </section>
 
+      {/* How it works */}
       <section className="mx-auto max-w-6xl px-6 py-16">
-        <div className="grid gap-10 lg:grid-cols-3">
-          <div>
-            <h2 className="font-display text-3xl">Built to be trusted with your inbox</h2>
-            <p className="mt-3 text-stone-600">This product handles sensitive business communication. Security and honesty are product features, not afterthoughts.</p>
-          </div>
-          <ul className="grid gap-5 sm:grid-cols-2 lg:col-span-2">
-            {[
-              { icon: Lock, t: "Encrypted credentials", d: "Google tokens are encrypted with AES-256-GCM and never reach your browser." },
-              { icon: ShieldCheck, t: "AI is opt-in", d: "Detection is deterministic by default. Email content is only sent to an external AI provider if you switch it on." },
-              { icon: BadgeCheck, t: "Evidence for every finding", d: "Each opportunity links to the exact sentences and messages it is based on. Amounts are never invented." },
-              { icon: Inbox, t: "You stay in control", d: "Drafts are created for you to review. Disconnect, export or delete your data at any time." },
-            ].map(({ icon: Icon, t, d }) => (
-              <li key={t} className="rounded-xl border border-[var(--color-line)] bg-white p-5">
-                <Icon size={18} className="text-stone-700" />
-                <h3 className="mt-2 font-semibold">{t}</h3>
-                <p className="mt-1 text-sm text-stone-600">{d}</p>
-              </li>
-            ))}
-          </ul>
+        <h2 className="font-display text-3xl">How it works</h2>
+        <p className="mt-2 max-w-2xl text-stone-600">Three steps to never miss a revenue opportunity again.</p>
+        <div className="mt-10 grid gap-8 md:grid-cols-3">
+          {[
+            { step: "1", title: "Connect your inbox", desc: "Link your Gmail account with one click. We only request read-only access — we never send email on your behalf.", icon: Inbox },
+            { step: "2", title: "We analyse your conversations", desc: "Our engine reads your commercial emails and detects unanswered leads, quiet proposals, overdue invoices and forgotten follow-ups.", icon: Zap },
+            { step: "3", title: "Act on the insights", desc: "Review prioritised opportunities with evidence, prepare follow-up drafts, and track what you've recovered.", icon: TrendingUp },
+          ].map(({ step, title, desc, icon: Icon }) => (
+            <div key={step} className="relative">
+              <div className="flex items-center gap-3">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--color-brand)] text-sm font-bold text-white">{step}</span>
+                <Icon size={20} className="text-[var(--color-brand)]" />
+              </div>
+              <h3 className="mt-4 font-semibold">{title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-stone-600">{desc}</p>
+            </div>
+          ))}
         </div>
+      </section>
+
+      {/* Trust & security */}
+      <section className="border-y border-[var(--color-line)] bg-white">
+        <div className="mx-auto max-w-6xl px-6 py-16">
+          <div className="grid gap-10 lg:grid-cols-3">
+            <div>
+              <h2 className="font-display text-3xl">Built to be trusted with your inbox</h2>
+              <p className="mt-3 text-stone-600">This product handles sensitive business communication. Security and honesty are product features, not afterthoughts.</p>
+            </div>
+            <ul className="grid gap-5 sm:grid-cols-2 lg:col-span-2">
+              {[
+                { icon: Lock, t: "Encrypted credentials", d: "Google tokens are encrypted with AES-256-GCM and never reach your browser." },
+                { icon: ShieldCheck, t: "AI is opt-in", d: "Detection is deterministic by default. Email content is only sent to an external AI provider if you switch it on." },
+                { icon: BadgeCheck, t: "Evidence for every finding", d: "Each opportunity links to the exact sentences and messages it is based on. Amounts are never invented." },
+                { icon: Inbox, t: "You stay in control", d: "Drafts are created for you to review. Disconnect, export or delete your data at any time." },
+              ].map(({ icon: Icon, t, d }) => (
+                <li key={t} className="rounded-xl border border-[var(--color-line)] bg-white p-5">
+                  <Icon size={18} className="text-stone-700" />
+                  <h3 className="mt-2 font-semibold">{t}</h3>
+                  <p className="mt-1 text-sm text-stone-600">{d}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* Notifications */}
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        <div className="grid gap-10 lg:grid-cols-2">
+          <div>
+            <Bell size={28} className="text-[var(--color-brand)]" />
+            <h2 className="font-display mt-4 text-3xl">Stay in the loop</h2>
+            <p className="mt-3 text-stone-600">Get notified when new opportunities are found, when proposals go quiet, or when invoices may be overdue. Install the app on your phone or computer for instant push notifications.</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href={auth ? "/app" : "/register"} className={buttonClass("primary") + " px-5 py-2.5"}>
+                Get started free <ArrowRight size={16} />
+              </Link>
+            </div>
+          </div>
+          <div className="rounded-2xl border border-[var(--color-line)] bg-white p-6">
+            <h3 className="font-semibold">What you&apos;ll get notified about</h3>
+            <ul className="mt-4 space-y-3 text-sm text-stone-600">
+              <li className="flex items-start gap-2"><span className="mt-0.5 h-2 w-2 rounded-full bg-emerald-600" /> New high-priority opportunities detected</li>
+              <li className="flex items-start gap-2"><span className="mt-0.5 h-2 w-2 rounded-full bg-amber-500" /> Proposals that have gone quiet</li>
+              <li className="flex items-start gap-2"><span className="mt-0.5 h-2 w-2 rounded-full bg-red-500" /> Invoices that may be overdue</li>
+              <li className="flex items-start gap-2"><span className="mt-0.5 h-2 w-2 rounded-full bg-sky-500" /> Daily summary of your pipeline</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* Social proof */}
+      <section className="border-y border-[var(--color-line)] bg-[var(--color-brand-soft)]">
+        <div className="mx-auto max-w-6xl px-6 py-12">
+          <div className="grid gap-8 md:grid-cols-3 text-center">
+            <div>
+              <div className="font-display text-4xl text-[var(--color-brand)]">100%</div>
+              <p className="mt-1 text-sm text-stone-600">Detection precision on sample data</p>
+            </div>
+            <div>
+              <div className="font-display text-4xl text-[var(--color-brand)]">4</div>
+              <p className="mt-1 text-sm text-stone-600">Types of revenue risk detected</p>
+            </div>
+            <div>
+              <div className="font-display text-4xl text-[var(--color-brand)]">0</div>
+              <p className="mt-1 text-sm text-stone-600">Emails sent without your approval</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="mx-auto max-w-6xl px-6 py-20 text-center">
+        <h2 className="font-display text-4xl text-stone-900">Stop losing revenue in your inbox.</h2>
+        <p className="mt-4 text-lg text-stone-600">Join freelancers, consultants and small agencies who use Inbox Revenue Intelligence to catch opportunities before they slip away.</p>
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <Link href={auth ? "/app/integrations" : "/register"} className={buttonClass("primary") + " px-6 py-3 text-base"}>
+            Get started free <ArrowRight size={16} />
+          </Link>
+          <Link href={auth ? "/app" : "/register?demo=1"} className={buttonClass("secondary") + " px-6 py-3 text-base"}>
+            Try the demo
+          </Link>
+        </div>
+        <p className="mt-4 text-xs text-stone-500">No credit card required. Free to start. Read-only Gmail access.</p>
       </section>
 
       <footer className="border-t border-[var(--color-line)]">
         <div className="mx-auto flex max-w-6xl flex-col justify-between gap-2 px-6 py-8 text-xs text-stone-500 sm:flex-row">
-          <span>Inbox Revenue Intelligence — helping you find revenue hiding in your inbox.</span>
+          <span>© {new Date().getFullYear()} Inbox Revenue Intelligence. All rights reserved.</span>
           <span className="flex gap-4">
-            <Link href="/privacy" className="hover:text-stone-800">Privacy & data handling</Link>
-            <Link href="/terms" className="hover:text-stone-800">Terms</Link>
+            <Link href="/privacy" className="hover:text-stone-800">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-stone-800">Terms of Service</Link>
           </span>
         </div>
       </footer>

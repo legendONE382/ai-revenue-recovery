@@ -121,7 +121,7 @@ export async function runInitialSyncPage(accountId: string): Promise<{ done: boo
   if (!account || account.status !== "active") return { done: true, synced: 0 };
   const connector = getConnector(account);
   const [ws] = await db.select({ settings: workspaces.settings }).from(workspaces).where(eq(workspaces.id, account.workspaceId));
-  const days = Math.min(365, Math.max(7, ws?.settings?.monitoringDays ?? 90));
+    const days = Math.min(7, Math.max(1, ws?.settings?.monitoringDays ? Math.min(ws.settings.monitoringDays, 7) : 7));
   try {
     let [state] = await db.select().from(syncState).where(eq(syncState.connectedAccountId, accountId));
     if (!state) [state] = await db.insert(syncState).values({ connectedAccountId: accountId }).returning();

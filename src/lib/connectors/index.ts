@@ -114,7 +114,7 @@ class GmailConnector implements MailConnector {
   async listInitialIds(sinceDays: number, pageToken?: string) {
     // Gmail-side pre-filtering saves quota; deterministic filters still run afterwards.
     const q = `newer_than:${sinceDays}d -in:chats -category:promotions -category:social -category:forums`;
-    const r = await this.client.listMessages(q, pageToken, 100);
+    const r = await this.client.listMessages(q, pageToken, 20);
     return { ids: (r.messages ?? []).map((m) => m.id), nextPageToken: r.nextPageToken };
   }
   async getMessages(ids: string[]) {

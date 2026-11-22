@@ -135,6 +135,15 @@ export function OnboardingFlow({ googleReady, demoFirst }: { googleReady: boolea
       {step === 2 && (
         <div>
           <h2 className="font-display text-2xl">Connect a mailbox</h2>
+          {googleReady && (
+            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+              <p className="font-medium">⚠️ You may see a &ldquo;Google hasn&apos;t verified this app&rdquo; warning</p>
+              <p className="mt-1 text-xs">This is normal for apps in testing mode. Google shows this for all apps that haven&apos;t completed their verification review. Your data is safe — we only request read-only access to your email.</p>
+              <p className="mt-2 text-xs">To proceed: click <strong>Advanced</strong> → <strong>Go to ai-revenue-recovery-weld-one.vercel.app (unsafe)</strong> → grant the requested permissions.</p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/screenshot.png" alt="Google unverified app warning" className="mt-3 rounded-lg border border-amber-200 w-full" />
+            </div>
+          )}
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             <button disabled={!googleReady || !!busy} onClick={connectGmail} className={cx("rounded-xl border p-4 text-left transition", googleReady ? "border-stone-900 hover:bg-stone-50" : "border-[var(--color-line)] opacity-60", demoFirst && "order-2")}>
               <div className="font-medium">Connect Gmail</div>
