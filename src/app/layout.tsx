@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   icons: {
     icon: "/icon.svg",
   },
+  other: {
+    "google-site-verification": "xbSDnvWUpVwwPQIOFKmeJu-5jykqXZ5RTL8RRe88FfE",
+  },
 };
 
 export const viewport: Viewport = {
