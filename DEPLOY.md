@@ -19,6 +19,7 @@ Back up `TOKEN_ENCRYPTION_KEY` in a password manager. If you lose it, every user
    - Set `DATABASE_POOL_MAX=2`.
 2. **Push the repo to GitHub**, then import it in Vercel (framework preset: Next.js). `vercel.json` already sets the build command to `node scripts/migrate.mjs && next build`, so migrations run on every deploy.
 3. **Environment variables** (Vercel › Project › Settings › Environment Variables): everything from your `.env`. Set `APP_URL` to your Vercel URL or custom domain, for example `https://revenue.example.com`.
+
 4. **Deploy.**
 5. **Scheduler.** On the Hobby plan, Vercel Cron runs at most once a day; `vercel.json` registers a daily run as a backup. For the real schedule, add the repo secrets `APP_URL` and `CRON_SECRET` (GitHub › Settings › Secrets and variables › Actions). The included workflow `.github/workflows/scheduler.yml` then calls the tick every 5 minutes. GitHub may delay scheduled runs; jobs are idempotent, so that's fine.
 

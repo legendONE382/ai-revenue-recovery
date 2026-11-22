@@ -13,8 +13,80 @@ const PREVIEW = [
 
 export default async function Landing() {
   const auth = await getAuth();
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Inbox Revenue Intelligence",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "description": "Find the revenue opportunities hiding in your inbox. Connect Gmail once and discover unanswered leads, quiet proposals, overdue invoices and forgotten follow-ups.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "description": "Free to start",
+    },
+    "featureList": [
+      "Unanswered lead detection",
+      "Proposal tracking",
+      "Payment follow-up alerts",
+      "Client follow-up reminders",
+      "AI-powered draft generation",
+      "Gmail integration",
+      "Evidence-based findings",
+      "Priority scoring",
+    ],
+  };
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How does Inbox Revenue Intelligence work?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Connect your Gmail account once. Our engine reads your commercial email conversations and detects unanswered leads, quiet proposals, overdue invoices, and forgotten follow-ups. Each finding comes with evidence and a priority score.",
+        },
+      },
+      {
+        "@type": "Question",
+        "name": "Is my email data safe?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Google tokens are encrypted with AES-256-GCM. Newsletter and notification bodies are never stored. AI processing is off by default. You can disconnect, export, or delete your data at any time.",
+        },
+      },
+      {
+        "@type": "Question",
+        "name": "Does the app send emails on my behalf?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. The app never sends email. It only creates draft suggestions for you to review, edit, and send manually.",
+        },
+      },
+      {
+        "@type": "Question",
+        "name": "Is it free to use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, you can start for free. Connect your Gmail and try the sample inbox to see how it works. No credit card required.",
+        },
+      },
+      {
+        "@type": "Question",
+        "name": "What Gmail permissions does it need?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "We request gmail.readonly (to read your emails) and gmail.compose (only to create drafts you ask for). We never send email on your behalf.",
+        },
+      },
+    ],
+  };
   return (
     <div className="min-h-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
         <Link href="/" className="flex items-center gap-2">
           <span className="grid h-7 w-7 place-items-center rounded-md bg-[var(--color-brand)] text-white">
@@ -203,6 +275,27 @@ export default async function Landing() {
               <div className="font-display text-4xl text-[var(--color-brand)]">0</div>
               <p className="mt-1 text-sm text-stone-600">Emails sent without your approval</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="border-y border-[var(--color-line)] bg-white">
+        <div className="mx-auto max-w-3xl px-6 py-16">
+          <h2 className="font-display text-3xl">Frequently asked questions</h2>
+          <div className="mt-8 space-y-6">
+            {[
+              { q: "How does Inbox Revenue Intelligence work?", a: "Connect your Gmail account once. Our engine reads your commercial email conversations and detects unanswered leads, quiet proposals, overdue invoices, and forgotten follow-ups. Each finding comes with evidence and a priority score." },
+              { q: "Is my email data safe?", a: "Yes. Google tokens are encrypted with AES-256-GCM. Newsletter and notification bodies are never stored. AI processing is off by default and requires your explicit consent. You can disconnect, export, or delete your data at any time." },
+              { q: "Does the app send emails on my behalf?", a: "No. The app never sends email. It only creates draft suggestions for you to review, edit, and send manually." },
+              { q: "Is it free to use?", a: "Yes, you can start for free. Connect your Gmail and try the sample inbox to see how it works. No credit card required." },
+              { q: "What Gmail permissions does it need?", a: "We request gmail.readonly (to read your emails) and gmail.compose (only to create drafts you ask for). We never send email on your behalf." },
+            ].map(({ q, a }) => (
+              <div key={q} className="border-b border-[var(--color-line)] pb-6">
+                <h3 className="font-semibold text-stone-900">{q}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-stone-600">{a}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

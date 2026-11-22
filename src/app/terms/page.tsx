@@ -1,6 +1,9 @@
 import Link from "next/link";
 
-export const metadata = { title: "Terms of service — Inbox Revenue Intelligence" };
+export const metadata = { 
+  title: "Terms of Service — Inbox Revenue Intelligence",
+  description: "Terms of service for Inbox Revenue Intelligence. Find revenue opportunities hiding in your inbox with AI-powered email analysis.",
+};
 export const dynamic = "force-dynamic";
 
 export default function TermsPage() {

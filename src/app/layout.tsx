@@ -4,9 +4,66 @@ import "./globals.css";
 import { InstallPrompt } from "@/components/install-prompt";
 
 export const metadata: Metadata = {
-  title: "Inbox Revenue Intelligence",
-  description: "Find the revenue opportunities hiding in your inbox. Never let another potential customer, proposal or payment slip through the cracks.",
+  title: {
+    default: "Inbox Revenue Intelligence — Find Revenue Hiding in Your Inbox",
+    template: "%s | Inbox Revenue Intelligence",
+  },
+  description: "Connect Gmail once. We read your commercial conversations over time and tell you which potential customer, proposal or payment is about to slip through the cracks — with the evidence to prove it. Free to start.",
+  keywords: [
+    "inbox revenue intelligence",
+    "email revenue recovery",
+    "Gmail lead tracking",
+    "proposal follow-up",
+    "invoice overdue detection",
+    "sales pipeline from email",
+    "email opportunity finder",
+    "revenue recovery tool",
+    "Gmail business intelligence",
+    "automated follow-up",
+    "missed revenue detection",
+    "client follow-up tracker",
+  ],
+  authors: [{ name: "Inbox Revenue Intelligence" }],
+  creator: "Inbox Revenue Intelligence",
+  publisher: "Inbox Revenue Intelligence",
   manifest: "/manifest.json",
+  metadataBase: new URL(process.env.APP_URL || "https://ai-revenue-recovery-weld-one.vercel.app"),
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "/",
+    siteName: "Inbox Revenue Intelligence",
+    title: "Inbox Revenue Intelligence — Find Revenue Hiding in Your Inbox",
+    description: "Connect Gmail once. We read your commercial conversations over time and tell you which potential customer, proposal or payment is about to slip through the cracks — with the evidence to prove it.",
+    images: [
+      {
+        url: "/screenshot.png",
+        width: 1280,
+        height: 720,
+        alt: "Inbox Revenue Intelligence dashboard showing prioritized revenue opportunities",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Inbox Revenue Intelligence — Find Revenue Hiding in Your Inbox",
+    description: "Connect Gmail once. We read your commercial conversations over time and tell you which potential customer, proposal or payment is about to slip through the cracks.",
+    images: ["/screenshot.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

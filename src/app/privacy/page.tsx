@@ -1,6 +1,9 @@
 import Link from "next/link";
 
-export const metadata = { title: "Privacy policy — Inbox Revenue Intelligence" };
+export const metadata = { 
+  title: "Privacy Policy — Inbox Revenue Intelligence",
+  description: "Learn how Inbox Revenue Intelligence handles your data. We encrypt your credentials, never store newsletter bodies, and only send email content to AI providers with your explicit consent.",
+};
 export const dynamic = "force-dynamic";
 
 export default function PrivacyPage() {
