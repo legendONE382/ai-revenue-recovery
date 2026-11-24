@@ -1,7 +1,6 @@
 # Free background scheduler for hosts without frequent cron (e.g. Vercel Hobby).
-# Repo › Settings › Secrets and variables › Actions → add APP_URL and CRON_SECRET.
-# GitHub runs schedules on a best-effort basis (typically every 5–15 min) — fine for this app,
-# whose jobs are idempotent and time-bucketed. Use scripts/worker.mjs for tighter timing.
+# Repo -> Settings -> Secrets and variables -> Actions -> add APP_URL and CRON_SECRET.
+# GitHub runs schedules on a best-effort basis (typically every 5-15 min).
 name: Scheduler tick
 
 on:
@@ -20,6 +19,9 @@ jobs:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
           if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
-            echo "APP_URL / CRON_SECRET secrets not set — skipping."; exit 0
+            echo "APP_URL / CRON_SECRET secrets not set - skipping."
+            exit 0
           fi
-          curl -fsS --max-time 100 -X POST "${APP_URL%/}/api/cron/tick" -H "Authorization: Bearer $CRON_SECRET"
+          curl -fsS --max-time 15 -X POST "${APP_URL%/}/api/cron/tick" -H "Authorization: Bearer $CRON_SECRET"
+          echo ""
+          echo "Tick completed successfully."
