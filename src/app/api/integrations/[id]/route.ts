@@ -33,7 +33,7 @@ export const POST = withAuth<Ctx>(
       await enqueue("incremental_sync", { accountId: a.id }, { workspaceId: a.workspaceId, idempotencyKey: `manual:${a.id}:${Math.floor(Date.now() / 30000)}` });
     }
     await enqueue("reevaluate_workspace", { workspaceId: a.workspaceId }, { workspaceId: a.workspaceId, idempotencyKey: `manual-reeval:${a.workspaceId}:${Math.floor(Date.now() / 60000)}` });
-    after(() => runWorker({ budgetMs: 25_000 }).catch(() => undefined));
+    after(() => runWorker({ budgetMs: 8_000 }).catch(() => undefined));
     return json({ ok: true });
   },
   { limit: 10 },

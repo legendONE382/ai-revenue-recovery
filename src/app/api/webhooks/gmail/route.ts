@@ -39,6 +39,6 @@ export async function POST(req: Request) {
     await db.update(syncState).set({ lastNotificationAt: new Date() }).where(eq(syncState.connectedAccountId, a.id));
     await enqueue("incremental_sync", { accountId: a.id }, { workspaceId: a.workspaceId, idempotencyKey: `push:${a.id}:${note.historyId}` });
   }
-  if (accounts.length) after(() => runWorker({ budgetMs: 20_000 }).catch(() => undefined));
+    if (accounts.length) after(() => runWorker({ budgetMs: 8_000 }).catch(() => undefined));
   return new Response(null, { status: 204 });
 }

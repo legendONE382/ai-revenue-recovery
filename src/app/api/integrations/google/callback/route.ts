@@ -56,7 +56,7 @@ export async function GET(req: Request) {
     await db.insert(syncState).values({ connectedAccountId: account.id }).onConflictDoNothing();
     await enqueue("initial_sync", { accountId: account.id }, { workspaceId: auth.workspace.id, idempotencyKey: `initial:${account.id}:start:${Date.now()}` });
     await audit({ workspaceId: auth.workspace.id, userId: auth.user.id, action: "gmail.connected", targetType: "connected_account", targetId: account.id, metadata: { email, scopes: tokens.scope }, ip: clientIp(req) });
-    after(() => runWorker({ budgetMs: 25_000 }).catch(() => undefined));
+    after(() => runWorker({ budgetMs: 8_000 }).catch(() => undefined));
     return NextResponse.redirect(new URL(`/app/integrations?connected=${encodeURIComponent(email)}`, url));
   } catch (e) {
     console.error("[oauth] callback failed:", e instanceof Error ? e.message : "unknown");
