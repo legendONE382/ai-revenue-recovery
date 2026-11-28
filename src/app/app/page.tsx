@@ -4,20 +4,23 @@ import { OpportunityCard } from "@/components/opportunity-card";
 import { NotificationsPanel } from "@/components/notifications-panel";
 import { Card, CardHeader, EmptyState, LinkButton, Money, MoneyByCurrency, PageHeader, Stat, fmtDate } from "@/components/ui";
 import { requireAuth } from "@/lib/auth";
-import { analytics, listAccounts, listOpportunities, overview, recentNotifications } from "@/lib/data";
+import { analytics, communicationBreakdown, getBusinessProfile, listAccounts, listOpportunities, mailboxIntelligence, overview, recentNotifications } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
 export default async function OverviewPage() {
   const auth = await requireAuth();
   const ws = auth.workspace.id;
-  const [stats, top, recovered, accounts, notes, a] = await Promise.all([
+  const [stats, top, recovered, accounts, notes, a, bp, mi, cb] = await Promise.all([
     overview(ws),
     listOpportunities(ws, { status: "open", limit: 6 }),
     listOpportunities(ws, { status: "resolved", sort: "recent", limit: 5 }),
     listAccounts(ws),
     recentNotifications(ws, 15),
     analytics(ws),
+    getBusinessProfile(ws),
+    mailboxIntelligence(ws),
+    communicationBreakdown(ws),
   ]);
   const problem = accounts.find((x) => x.account.status === "revoked" || x.account.status === "error");
   const hour = new Date().getHours();
@@ -45,6 +48,57 @@ export default async function OverviewPage() {
             Reconnect
           </Link>
         </div>
+      )}
+
+      <div className="mb-6 grid gap-4 md:grid-cols-2">
+        <Card className="p-5">
+          <h2 className="text-sm font-semibold">Business snapshot</h2>
+          {bp.profile ? (
+            <div className="mt-3 space-y-1 text-sm">
+              <div className="font-medium">{bp.profile.businessName ?? "Unnamed business"}</div>
+              <div className="text-stone-600">{[bp.profile.businessType, bp.profile.industry].filter(Boolean).join(" · ")}</div>
+              {bp.profile.description && <p className="text-stone-600">{bp.profile.description}</p>}
+              {bp.offerings.length > 0 && <div className="text-xs text-stone-500">Offerings: {bp.offerings.map((o) => o.name).join(", ")}</div>}
+              <Link href="/app/settings/business-profile" className="mt-2 inline-block text-xs text-emerald-700 underline">Edit business profile</Link>
+            </div>
+          ) : (
+            <div className="mt-3 text-sm text-stone-600">
+              No business profile yet. <Link href="/app/settings" className="text-emerald-700 underline">Complete your profile</Link>.
+            </div>
+          )}
+        </Card>
+        <Card className="p-5">
+          <h2 className="text-sm font-semibold">Mailbox intelligence</h2>
+          <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
+            <div><dt className="text-stone-500 text-xs">Emails reviewed</dt><dd className="font-medium">{mi.emailsReviewed}</dd></div>
+            <div><dt className="text-stone-500 text-xs">Conversations</dt><dd className="font-medium">{mi.conversations}</dd></div>
+            <div><dt className="text-stone-500 text-xs">Business-related</dt><dd className="font-medium">{mi.businessRelated}</dd></div>
+            <div><dt className="text-stone-500 text-xs">Contacts</dt><dd className="font-medium">{mi.contacts}</dd></div>
+            <div><dt className="text-stone-500 text-xs">Need attention</dt><dd className="font-medium">{mi.needsAttention}</dd></div>
+          </dl>
+        </Card>
+      </div>
+
+      {cb.length > 0 && (
+        <Card className="mb-6 p-5">
+          <h2 className="text-sm font-semibold">Communication overview</h2>
+          <ul className="mt-3 space-y-1 text-sm">
+            {cb.map((c) => (
+              <li key={c.category} className="flex justify-between"><span className="text-stone-600">{c.category}</span><span className="font-medium">{c.n}</span></li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
+      {bp.insights.length > 0 && (
+        <Card className="mb-6 p-5">
+          <h2 className="text-sm font-semibold">Business insights</h2>
+          <ul className="mt-3 space-y-2 text-sm">
+            {bp.insights.slice(0, 5).map((i) => (
+              <li key={i.id}><div className="font-medium">{i.title}</div><div className="text-stone-600">{i.description}</div></li>
+            ))}
+          </ul>
+        </Card>
       )}
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">

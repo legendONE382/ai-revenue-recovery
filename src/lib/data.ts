@@ -5,6 +5,11 @@ import {
   companies,
   connectedAccounts,
   contacts,
+  businessInsights,
+  businessOfferings,
+  businessProfileFacts,
+  businessProfiles,
+  emailIntelligence,
   emailMessages,
   emailThreads,
   extractedFinancialRecords,
@@ -214,4 +219,36 @@ export async function listAccounts(workspaceId: string) {
 
 export async function recentNotifications(workspaceId: string, limit = 20) {
   return db.select().from(notifications).where(eq(notifications.workspaceId, workspaceId)).orderBy(desc(notifications.createdAt)).limit(limit);
+}
+
+export async function getBusinessProfile(workspaceId: string) {
+  const [profile] = await db.select().from(businessProfiles).where(eq(businessProfiles.workspaceId, workspaceId));
+  const offerings = profile ? await db.select().from(businessOfferings).where(eq(businessOfferings.profileId, profile.id)) : [];
+  const facts = profile ? await db.select().from(businessProfileFacts).where(eq(businessProfileFacts.profileId, profile.id)) : [];
+  const insights = await db.select().from(businessInsights).where(eq(businessInsights.workspaceId, workspaceId));
+  return { profile: profile ?? null, offerings, facts, insights };
+}
+
+export async function mailboxIntelligence(workspaceId: string) {
+  const [emailsReviewed] = await db.select({ n: sql<number>`count(*)::int` }).from(emailIntelligence).where(eq(emailIntelligence.workspaceId, workspaceId));
+  const [conversations] = await db.select({ n: sql<number>`count(*)::int` }).from(emailThreads).where(eq(emailThreads.workspaceId, workspaceId));
+  const [businessRelated] = await db.select({ n: sql<number>`count(*)::int` }).from(emailThreads).where(and(eq(emailThreads.workspaceId, workspaceId), eq(emailThreads.classification, "commercial")));
+  const [contactsCount] = await db.select({ n: sql<number>`count(*)::int` }).from(contacts).where(eq(contacts.workspaceId, workspaceId));
+  const [needsAttention] = await db.select({ n: sql<number>`count(*)::int` }).from(emailThreads).where(and(eq(emailThreads.workspaceId, workspaceId), eq(emailThreads.conversationStatus, "awaiting_business")));
+  return {
+    emailsReviewed: emailsReviewed?.n ?? 0,
+    conversations: conversations?.n ?? 0,
+    businessRelated: businessRelated?.n ?? 0,
+    contacts: contactsCount?.n ?? 0,
+    needsAttention: needsAttention?.n ?? 0,
+  };
+}
+
+export async function communicationBreakdown(workspaceId: string) {
+  const rows = await db
+    .select({ category: emailIntelligence.primaryCategory, n: sql<number>`count(*)::int` })
+    .from(emailIntelligence)
+    .where(eq(emailIntelligence.workspaceId, workspaceId))
+    .groupBy(emailIntelligence.primaryCategory);
+  return rows;
 }

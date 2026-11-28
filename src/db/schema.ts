@@ -450,3 +450,134 @@ export const rateLimits = pgTable("rate_limits", {
   windowStart: ts("window_start").notNull(),
   count: integer("count").notNull().default(0),
 });
+
+/* --------------------------------- Business profile --------------------------------- */
+
+export const businessProfiles = pgTable(
+  "business_profiles",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }).unique(),
+    businessName: text("business_name"),
+    businessType: text("business_type"),
+    industry: text("industry"),
+    profession: text("profession"),
+    role: text("role"),
+    description: text("description"),
+    website: text("website"),
+    country: text("country"),
+    location: text("location"),
+    timezone: text("timezone"),
+    preferredCurrency: text("preferred_currency"),
+    targetCustomerTypes: text("target_customer_types").array().notNull().default(sql`'{}'::text[]`),
+    targetIndustries: text("target_industries").array().notNull().default(sql`'{}'::text[]`),
+    targetMarkets: text("target_markets").array().notNull().default(sql`'{}'::text[]`),
+    acceptedEnquiryTypes: text("accepted_enquiry_types").array().notNull().default(sql`'{}'::text[]`),
+    excludedEnquiryTypes: text("excluded_enquiry_types").array().notNull().default(sql`'{}'::text[]`),
+    businessGoals: text("business_goals").array().notNull().default(sql`'{}'::text[]`),
+    inboxPurpose: text("inbox_purpose"),
+    typicalDealSize: text("typical_deal_size"),
+    salesCycle: text("sales_cycle"),
+    paymentTerms: text("payment_terms"),
+    businessHours: text("business_hours"),
+    communicationTone: text("communication_tone"),
+    emailSignature: text("email_signature"),
+    profileStatus: text("profile_status").notNull().default("draft"), // draft | complete | skipped
+    createdAt: createdAt(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("business_profiles_ws_idx").on(t.workspaceId)],
+);
+
+export const businessOfferings = pgTable(
+  "business_offerings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
+    profileId: uuid("profile_id").notNull().references(() => businessProfiles.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    category: text("category"),
+    targetCustomer: text("target_customer"),
+    priceRange: text("price_range"),
+    currency: text("currency"),
+    keywords: text("keywords").array().notNull().default(sql`'{}'::text[]`),
+    active: boolean("active").notNull().default(true),
+    createdAt: createdAt(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("business_offerings_profile_idx").on(t.profileId)],
+);
+
+export const businessProfileFacts = pgTable(
+  "business_profile_facts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
+    profileId: uuid("profile_id").notNull().references(() => businessProfiles.id, { onDelete: "cascade" }),
+    category: text("category").notNull(),
+    key: text("key").notNull(),
+    value: text("value").notNull(),
+    source: text("source").notNull().default("ai"), // user | ai | email
+    confidence: real("confidence").notNull().default(0.5),
+    status: text("status").notNull().default("suggested"), // confirmed | suggested | rejected
+    evidenceMessageIds: uuid("evidence_message_ids").array().notNull().default(sql`'{}'::uuid[]`),
+    evidenceThreadIds: uuid("evidence_thread_ids").array().notNull().default(sql`'{}'::uuid[]`),
+    firstObservedAt: ts("first_observed_at").notNull().defaultNow(),
+    lastObservedAt: ts("last_observed_at").notNull().defaultNow(),
+    createdAt: createdAt(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("business_profile_facts_profile_key").on(t.profileId, t.category, t.key)],
+);
+
+export const emailIntelligence = pgTable(
+  "email_intelligence",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
+    messageId: uuid("message_id").notNull().references(() => emailMessages.id, { onDelete: "cascade" }).unique(),
+    threadId: uuid("thread_id").references(() => emailThreads.id, { onDelete: "cascade" }),
+    primaryCategory: text("primary_category").notNull(),
+    tags: text("tags").array().notNull().default(sql`'{}'::text[]`),
+    summary: text("summary"),
+    senderClassification: text("sender_classification"),
+    communicationIntent: text("communication_intent"),
+    importance: text("importance").notNull().default("low"), // low | medium | high | critical
+    actionRequired: boolean("action_required").notNull().default(false),
+    recommendedAction: text("recommended_action"),
+    businessRelevance: text("business_relevance").notNull().default("none"), // none | low | medium | high
+    offeringId: uuid("offering_id").references(() => businessOfferings.id, { onDelete: "set null" }),
+    relevanceExplanation: text("relevance_explanation"),
+    confidence: real("confidence").notNull().default(0.5),
+    evidence: jsonb("evidence").$type<Record<string, unknown>>().notNull().default({}),
+    analysisStatus: text("analysis_status").notNull().default("pending"), // pending | done | skipped | failed
+    analysisVersion: text("analysis_version").notNull().default("1"),
+    analysedAt: ts("analysed_at"),
+    createdAt: createdAt(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("email_intelligence_ws_idx").on(t.workspaceId),
+    index("email_intelligence_thread_idx").on(t.threadId),
+  ],
+);
+
+export const businessInsights = pgTable(
+  "business_insights",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    description: text("description").notNull(),
+    category: text("category").notNull(),
+    evidence: jsonb("evidence").$type<Record<string, unknown>>().notNull().default({}),
+    confidence: real("confidence").notNull().default(0.5),
+    source: text("source").notNull().default("ai"), // ai | system | user
+    status: text("status").notNull().default("active"), // active | dismissed | corrected
+    firstObservedAt: ts("first_observed_at").notNull().defaultNow(),
+    lastUpdatedAt: ts("last_updated_at").notNull().defaultNow(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("business_insights_ws_idx").on(t.workspaceId)],
+);

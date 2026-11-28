@@ -20,6 +20,7 @@ export default async function SettingsPage() {
   return (
     <>
       <PageHeader title="Settings" subtitle="Account, detection thresholds, privacy, AI providers, notifications and your data." />
+      <div className="mb-4"><a href="/app/settings/business-profile" className="text-sm text-emerald-700 underline">Manage business profile →</a></div>
       <div className="space-y-6">
         <AccountForm name={auth.user.name} email={auth.user.email} />
         <SettingsForms
